@@ -6,6 +6,7 @@ from json_helpers import extract_json
 import requests
 import tkinter as tk
 from tkinter import messagebox
+import speech_recognition as sr
 
 # Load environment variables
 load_dotenv()
@@ -44,6 +45,23 @@ def on_submit():
         process_query(user_query)
     else:
         messagebox.showwarning("Warning", "Please enter a query.")
+
+def listen_for_voice():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Listening...")
+        audio = recognizer.listen(source)
+    
+    try:
+        # Recognize speech using Google Speech Recognition
+        user_query = recognizer.recognize_google(audio)
+        entry.delete(0, tk.END)  # Clear any previous text in the entry
+        entry.insert(0, user_query)  # Insert the recognized speech into the entry field
+        process_query(user_query)
+    except sr.UnknownValueError:
+        messagebox.showerror("Error", "Could not understand audio")
+    except sr.RequestError as e:
+        messagebox.showerror("Error", f"Could not request results; {e}")
 
 def process_query(user_query):
     messages = [
@@ -99,9 +117,13 @@ root.title("Query Interface")
 entry = tk.Entry(root, width=50)
 entry.pack(pady=10)
 
-# Create and place the submit button
+# Create and place the submit button for text input
 submit_button = tk.Button(root, text="Submit Query", command=on_submit)
 submit_button.pack(pady=5)
+
+# Create and place the button for voice input
+voice_button = tk.Button(root, text="Voice Input", command=listen_for_voice)
+voice_button.pack(pady=5)
 
 # Start the GUI event loop
 root.mainloop()
